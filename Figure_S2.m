@@ -7,10 +7,9 @@
 % (c) Mikkel Bennedsen (2023)
 %
 % This code can be used, distributed, and changed freely. Please cite Bennedsen,
-% Hillebrand, and Koopman (2023): "A New Approach to the CO2 Airborne Fraction: Tackling Zero Emissions and Enhancing Statistical Precision".
+% Hillebrand, and Koopman (2023): "A New Approach to the CO2 Airborne Fraction: Enhancing Statistical Precision and Tackling Zero Emissions".
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
 
 clc; clear; close all;
 %% Init
