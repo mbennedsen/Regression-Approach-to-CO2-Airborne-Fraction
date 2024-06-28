@@ -4,30 +4,29 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% (c) Mikkel Bennedsen (2023)
+% (c) Mikkel Bennedsen (2024)
 %
 % This code can be used, distributed, and changed freely. Please cite Bennedsen,
-% Hillebrand, and Koopman (2023): "A New Approach to the CO2 Airborne Fraction: Enhancing Statistical Precision and Tackling Zero Emissions".
+% Hillebrand, and Koopman (2024): "A Regression-Based Approach to the CO2 Airborne Fraction: Enhancing Statistical Precision and Tackling Zero Emissions".
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clc; clear; close all;
+addpath('Data');
 %% Init
 filenam = 'AF_data.xlsx';
-M = 1e6;
 
-start_year = 1959; % For retrieving DGP values
-end_year = 2021;
+start_year = 1959;
+end_year = 2022;
 
-Tend   = 2100-1959+1; 
-Tstart = 63;
+indx = 1:64; % 1:64 will select entire sample (1959-2022)
+
+detrend_ENSO = 1; % if = 1, then detrend ENSO.
 
 %% Load data
 dat = xlsread(filenam,1);
 
 %% Construct data
-
-%%% GHG %%%
 N1 = sum(dat(:,1)<start_year)+1;
 N2 = sum(dat(:,1)<end_year)+1;
 
@@ -42,78 +41,71 @@ ENSO = dat(N1:N2,10);
 VAI = dat(N1:N2,9);
 
 n = length(t);
+%% Detrend ENSO data
+if detrend_ENSO == 1
+    X = [ones(length(ENSO),1),t-t(1)];
+    y = ENSO;
+    bhat = (X'*X)\X'*y;
 
-%% Get DGP values
-x_E = FF_GCP + LUC_GCP;
-AF = y_ATM./x_E;
-
-%%% Conventional estimator
-a1 = mean(AF);
-s21 = var(AF);
-    
-%%% OLS estimator
-yy = y_ATM;
-XX = x_E;
-a2 = (XX'*XX)\XX'*yy;
-s22 = sum( (yy-XX*a2).^2 )/(n-length(a2));
-
-%%% DGP for emissions
-yy = x_E;
-XX = [ones(n,1),(1:n)'];
-b_E = (XX'*XX)\XX'*yy;
-s2E = sum( (yy-XX*b_E).^2 )/(n-length(b_E));
-
-%% Run MC study
-a1_sim = nan(M,Tend-Tstart+1);
-a2_sim = nan(M,Tend-Tstart+1);
-for i = 1:M
-    %%% Simulate whole trajectory
-    eps_t = randn(Tend,1); % Common random numbers
-    E_sim = [ones(Tend,1),(1:Tend)']*b_E + sqrt(s2E)*randn(Tend,1);
-
-    AF_sim  = a1 + sqrt(s21)*eps_t;
-    G_sim   = a1*E_sim + sqrt(s22)*eps_t;
-
-
-    for t = Tstart:Tend
-        %%% Conventional estimator
-        yy_sim = AF_sim(1:t);
-        a1_sim(i,t-Tstart+1) = mean(yy_sim);
-
-        %%% OLS estimator
-        yy_sim = G_sim(1:t);
-        XX_sim = E_sim(1:t);
-        a2_sim(i,t-Tstart+1) = (XX_sim'*XX_sim)\XX_sim'*yy_sim;
-    end
-
+    ENSO = ENSO - X*bhat;
 end
 
 
-%% Calculate RMSE
-a1_rmse = sqrt( mean( (a1_sim - a1).^2 ) );
-a2_rmse = sqrt( mean( (a2_sim - a1).^2 ) );
+%% Index data to requested sub-sample
+y_ATM = y_ATM(indx);
+t = t(indx);
+ENSO = ENSO(indx);
+VAI = VAI(indx);
+FF_GCP = FF_GCP(indx);
+LUC_GCP = LUC_GCP(indx);
+LUC_HN = LUC_HN(indx);
+LUC_NEW = LUC_NEW(indx);
+
+n = length(t);
 
 %% plot
 fig1 = figure(1);
-subplot(1,2,1);
-plot(Tstart:Tend,a1_rmse,'b-','LineWidth',1.5), hold on
-plot(Tstart:Tend,a2_rmse,'r-.','LineWidth',1.5), hold on
-lgd = legend('RMSE($\alpha_1$)','RMSE($\alpha_2$)','Interpreter','latex','Location','NorthEast');
-lgd.FontSize = 8;
+subplot(2,2,1);
+plot(t,y_ATM,'b-','LineWidth',1.5), hold on
+plot(1992*ones(100,1),linspace(0,6.2,100),'k--','LineWidth',1), hold on
+title('a) Atmospheric CO2 changes ($G_t$)','FontSize',8,'Interpreter','latex');
+ylabel('GtC/yr','FontSize',8,'Interpreter','latex');
+grid on
+set(gca,'FontSize',8)
+axis tight;
+
+subplot(2,2,2);
+plot(t,FF_GCP,'b-','LineWidth',1.5), hold on
+plot(t,LUC_GCP,'r-','LineWidth',1.5), hold on
+plot(t,LUC_HN,'g-','LineWidth',1.5), hold on
+plot(t,LUC_NEW,'c-','LineWidth',1.5), hold on
+plot(1992*ones(100,1),linspace(0,10.5,100),'k--','LineWidth',1), hold on
+title('b) CO2 emissions ($E_t$)','FontSize',8,'Interpreter','latex');
+lgd = legend('FF (GCP)','LULCC (GCP)','LULCC (H\&C)','LULCC (vMa)','Interpreter','latex','Location','NorthWest');
+lgd.FontSize = 6;
 legend('boxoff');
-ylabel('Root mean squared error (RMSE)','FontSize',8);
-xlabel('T','FontSize',8);
+ylabel('GtC/yr','FontSize',8,'Interpreter','latex');
+grid on
 axis tight;
 set(gca,'FontSize',8)
 
-subplot(1,2,2);
-plot(Tstart:Tend,a2_rmse./a1_rmse,'b-','LineWidth',1.5), hold on
-plot(Tstart:Tend,ones(Tend-Tstart+1,1),'k--'), hold on
-lgd = legend('RMSE($\alpha_2$)/RMSE($\alpha_1$)','Interpreter','latex','Location','NorthEast');
-lgd.FontSize = 8;
-legend('boxoff');
-ylabel('Relative RMSE','FontSize',8);
-xlabel('T','FontSize',8);
+subplot(2,2,3);
+plot(t,ENSO,'b-','LineWidth',1.5), hold on
+plot(1992*ones(100,1),linspace(-1.1,2.2,100),'k--','LineWidth',1), hold on
+title('c) ENSO','FontSize',8,'Interpreter','latex');
+grid on
+ylabel('Dimensionless','FontSize',8,'Interpreter','latex');
 axis tight;
 set(gca,'FontSize',8)
+
+subplot(2,2,4);
+plot(t,VAI,'b-','LineWidth',1.5), hold on
+plot(1992*ones(100,1),linspace(0,0.175,100),'k--','LineWidth',1), hold on
+title('d) VAI','FontSize',8,'Interpreter','latex');
+grid on
+ylabel('Dimensionless','FontSize',8,'Interpreter','latex');
+axis tight;
+set(gca,'FontSize',8)
+
+
 

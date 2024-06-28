@@ -18,7 +18,7 @@ addpath('Data');
 filenam = 'AF_data.xlsx';
 
 rng(666);
-SSP = 2;
+SSP = 1; % Set to SSP = 1, 3, 4, 5, 6 to reproduce Figure S4, S5, S6, S7, S8
 
 start_year = 2023;
 end_year   = 2100;

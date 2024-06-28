@@ -4,21 +4,22 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% (c) Mikkel Bennedsen (2023)
+% (c) Mikkel Bennedsen (2024)
 %
 % This code can be used, distributed, and changed freely. Please cite Bennedsen,
-% Hillebrand, and Koopman (2023): "A New Approach to the CO2 Airborne Fraction: Enhancing Statistical Precision and Tackling Zero Emissions".
+% Hillebrand, and Koopman (2024): "A Regression-Based Approach to the CO2 Airborne Fraction: Enhancing Statistical Precision and Tackling Zero Emissions".
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clc; clear; close all;
+addpath('Data');
 %% Init
 filenam = 'AF_data.xlsx';
 
 start_year = 1959;
-end_year = 2021;
+end_year = 2022;
 
-indx = 1:63; % 1:63 will select entire sample (1959-2021)
+indx = 1:64; % 1:64 will select entire sample (1959-2022)
 
 maxLags = 5;
 
@@ -58,7 +59,7 @@ AF = AF(indx);
 %%
 
 ADF_tab = nan(6,maxLags+1);
-EG_tab = nan(2,maxLags+1);
+EG_tab = nan(1,maxLags+1);
 %%  ADF
 
 for i = 0:maxLags
@@ -82,9 +83,6 @@ for i = 0:maxLags
 
     [h,pValue,stat,cValue] = egcitest([y_ATM,x_E],'Lags',i,'RReg','adf');
     EG_tab(1,i+1) = pValue;
-
-    [h,pValue,stat,cValue] = egcitest([y_ATM,x_E],'Lags',i,'RReg','pp');
-    EG_tab(2,i+1) = pValue; 
 end
 
 

@@ -4,23 +4,24 @@
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% (c) Mikkel Bennedsen (2023)
+% (c) Mikkel Bennedsen (2024)
 %
 % This code can be used, distributed, and changed freely. Please cite Bennedsen,
-% Hillebrand, and Koopman (2023): "A New Approach to the CO2 Airborne Fraction: Enhancing Statistical Precision and Tackling Zero Emissions".
+% Hillebrand, and Koopman (2024): "A Regression-Based Approach to the CO2 Airborne Fraction: Enhancing Statistical Precision and Tackling Zero Emissions".
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 clc; clear; close all;
+addpath('Data');
 %% Init
 filenam = 'AF_data.xlsx';
 
 title_str = {'Data: GCP','Data: H&N','Data: vMa'};
 
 start_year = 1959;
-end_year = 2021;
+end_year = 2022;
 
-indx = 1:63; % 1:63 will select entire sample (1959-2021)
+indx = 1:64; % 1:64 will select entire sample (1959-2022)
 
 detrend_ENSO = 1; % if = 1, then detrend ENSO before running analysis.
 
@@ -69,12 +70,12 @@ for j = 1:3
     elseif j == 2 % Data: H&N (raw)
         disp(' ');
         disp(' ');
-        disp('Analyzing: H&N AF data...');
+        disp('Analyzing: H&C AF data...');
         LUC = LUC_HN;
     elseif j == 3 % Data: New (raw)
         disp(' ');
         disp(' ');
-        disp('Analyzing: This study AF data...');
+        disp('Analyzing: vMa AF data...');
         LUC = LUC_NEW;
     end   
     x_E = FF_GCP + LUC;
@@ -94,7 +95,7 @@ for j = 1:3
 
     R2 = 1-sum((AF-a_hat0).^2)/sum( (AF-mean(AF)).^2);
     
-    output1 = [a_hat0;se_HAC0;se_HAC0/se_HAC0;CI00;sqrt(s20);R2];
+    output1 = [a_hat0;se_HAC0;se_HAC0/se_HAC0;CI00;sqrt(s20);R2;nan(4,1)];
 
 
 
@@ -116,7 +117,7 @@ for j = 1:3
 
     R2 = 1-sum((yy-XX*btmp).^2)/sum( (yy-mean(yy)).^2);
     
-    output2 = [a_hat1;se_HAC1;se_HAC1/se_HAC0;CI11;sqrt(s21);R2]; 
+    output2 = [a_hat1;se_HAC1;se_HAC1/se_HAC0;CI11;sqrt(s21);R2;nan(4,1)]; 
     
 
     
@@ -132,13 +133,14 @@ for j = 1:3
     % w HAC
     EstCov = hac(XX,yy,'display','off','intercept',false);
     se_HAC0_EV = sqrt(EstCov(1,1));
+    se_HAC0_ENSO_VAI = diag(sqrt(EstCov));
 
     % 95% confidence interval (assuming Gaussianity)
     CI00_EV = [a_hat0_EV-1.96*se_HAC0_EV;a_hat0_EV+1.96*se_HAC0_EV];
 
     R2 = 1-sum((yy-XX*btmp).^2)/sum( (yy-mean(yy)).^2);
     
-    output3 = [a_hat0_EV;se_HAC0_EV;se_HAC0_EV/se_HAC0;CI00_EV;sqrt(s20_EV);R2];
+    output3 = [a_hat0_EV;se_HAC0_EV;se_HAC0_EV/se_HAC0;CI00_EV;sqrt(s20_EV);R2;btmp(2);se_HAC0_ENSO_VAI(2);btmp(3);se_HAC0_ENSO_VAI(3)];
     
 
     
@@ -154,6 +156,7 @@ for j = 1:3
     % w HAC
     EstCov = hac(XX,yy,'display','off','intercept',false);
     se_HAC1_EV = sqrt(EstCov(1,1));
+    se_HAC1_ENSO_VAI = diag(sqrt(EstCov));
 
     % 95% confidence interval (valid by asymptotic arguments)
     CI11_EV = [a_hat1_EV-1.96*se_HAC1_EV;a_hat1_EV+1.96*se_HAC1_EV];
@@ -161,9 +164,8 @@ for j = 1:3
     R2 = 1-sum((yy-XX*btmp).^2)/sum( (yy-mean(yy)).^2);
 
     
-    output4 = [a_hat1_EV;se_HAC1_EV;se_HAC1_EV/se_HAC0;CI11_EV;sqrt(s21_EV);R2];
+    output4 = [a_hat1_EV;se_HAC1_EV;se_HAC1_EV/se_HAC0;CI11_EV;sqrt(s21_EV);R2;btmp(2);se_HAC1_ENSO_VAI(2);btmp(3);se_HAC1_ENSO_VAI(3)];
     
-
     %% Create table
     tab_res = [output1,output2,output3,output4];
     
