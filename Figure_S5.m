@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
-% This script will produce Figure 2 of the main paper. 
+% This script will produce Figure S5-S9 of the main paper. 
 %
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %
@@ -18,7 +18,7 @@ addpath('Data');
 filenam = 'AF_data.xlsx';
 
 rng(666);
-SSP = 2;
+SSP = 1; % Set to SSP = 1, 3, 4, 5, 6 to reproduce Figure S5, S6, S7, S8, S9
 
 start_year = 2023;
 end_year   = 2100;
@@ -290,7 +290,6 @@ set(gca,'FontSize',9)
 
 set(lgd, 'Units', 'normalized');
 set(lgd, 'Position', [0.26 0.13 0.05 0.05]);
-
 
 
 
