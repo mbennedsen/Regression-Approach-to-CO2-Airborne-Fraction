@@ -48,9 +48,8 @@ n = length(t);
 x_E = FF_GCP + LUC_GCP;
 AF = y_ATM./x_E;
 
-%%% Conventional estimator
-a1 = mean(AF);
-s21 = var(AF);
+%%% Set value of AF
+a1 = 0.4478;
     
 %%% OLS estimator
 yy = y_ATM;
@@ -72,8 +71,8 @@ for i = 1:M
     eps_t = randn(Tend,1); % Common random numbers
     E_sim = [ones(Tend,1),(1:Tend)']*b_E + sqrt(s2E)*randn(Tend,1);
 
-    AF_sim  = a1 + sqrt(s21)*eps_t;
     G_sim   = a1*E_sim + sqrt(s22)*eps_t;
+    AF_sim = G_sim./E_sim;
 
 
     for t = Tstart:Tend
